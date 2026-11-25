@@ -26,6 +26,19 @@ EXPECTED_BYTES = 131
 EXPECTED_SHA256 = "b2f7b7518424f5eddfeab5f910ef19749fbaf0c5c5bcb6fdc7ffafba2b18480b"
 
 
+def verify(path, data):
+    """Read back the written file and confirm it is byte-identical."""
+    with open(path, "rb") as f:
+        written = f.read()
+    if written != data:
+        print(f"read-back mismatch at {path}", file=sys.stderr)
+        return False
+    if hashlib.sha256(written).hexdigest() != EXPECTED_SHA256:
+        print(f"read-back sha256 mismatch at {path}", file=sys.stderr)
+        return False
+    return True
+
+
 def main() -> int:
     data = LINE.encode("utf-8")
     if not 1 <= len(LINE) <= 200:
@@ -46,6 +59,9 @@ def main() -> int:
     path = os.path.join(out_dir, "entry.txt")
     with open(path, "wb") as f:
         f.write(data)
+    verified = verify(path, data)
+    if not verified:
+        return 1
     print(f"wrote {len(data)} bytes to {path} sha256={digest}")
     return 0
 
